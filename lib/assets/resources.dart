@@ -29,13 +29,13 @@ abstract class LocaleResource extends Resource {
 class R {
   const R._();
 
-  static AppThemeColor get color => AppThemeColor.impl(Config().theme);
+  static AppThemeColor get color => AppThemeColor.impl(config.theme);
 
-  static AppThemeImage get image => AppThemeImage.impl(Config().theme);
+  static AppThemeImage get image => AppThemeImage.impl(config.theme);
 
-  static AppThemeStyle get style => AppThemeStyle.impl(Config().theme);
+  static AppThemeStyle get style => AppThemeStyle.impl(config.theme);
 
-  static AppString get string => AppString.impl(Config().languageCode);
+  static AppString get string => AppString.impl(config.languageCode);
 
   static AppDimen get dimen => AppDimen.impl();
 }

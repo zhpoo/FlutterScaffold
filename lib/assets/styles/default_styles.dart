@@ -8,7 +8,7 @@ class DefaultAppThemeStyle implements AppThemeStyle {
   const DefaultAppThemeStyle();
 
   @override
-  AppTheme get theme => Config().theme;
+  AppTheme get theme => config.theme;
 
   final TextStyle defaultTextStyle = const TextStyle(fontSize: 16.0);
 

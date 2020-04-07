@@ -6,6 +6,8 @@ import 'package:musket_app/main.dart';
 import 'package:musket_app/models/config_model.dart';
 import 'package:musket_app/network/api_manager.dart';
 
+final Config config = Config();
+
 class Config with ChangeNotifier, BaseConfig {
   static Config _instance;
 
@@ -62,13 +64,11 @@ class Config with ChangeNotifier, BaseConfig {
   DateTime lastSendVerifyCodeTime;
 
   bool get canSendVerifyCode {
-    return Config().lastSendVerifyCodeTime == null ||
-        DateTime.now().difference(Config().lastSendVerifyCodeTime) >
-            Config.resendVerifyCodeDuration;
+    return config.lastSendVerifyCodeTime == null ||
+        DateTime.now().difference(config.lastSendVerifyCodeTime) > Config.resendVerifyCodeDuration;
   }
 
-  int get sendVerifyCodeLeftSeconds => Config()
-      .lastSendVerifyCodeTime
+  int get sendVerifyCodeLeftSeconds => config.lastSendVerifyCodeTime
       .add(Config.resendVerifyCodeDuration)
       .difference(DateTime.now())
       .inSeconds;

@@ -28,15 +28,6 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 
-# zendesk
--keep public interface com.zendesk.** { *; }
--keep public class com.zendesk.** { *; }
-
-# umeng
--keep class com.umeng.** {*;}
--keepclassmembers class * {
-   public <init> (org.json.JSONObject);
-}
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);

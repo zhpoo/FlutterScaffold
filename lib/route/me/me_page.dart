@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:musket/common/toasts.dart';
 import 'package:musket/musket.dart';
+import 'package:musket/route/mixin/safe_state.dart';
 import 'package:musket/route/routes.dart';
 import 'package:musket/widget/dialogs.dart';
 import 'package:musket/widget/item_text.dart';
@@ -20,16 +21,16 @@ class MePage extends StatefulWidget {
   State<StatefulWidget> createState() => _MePageState();
 }
 
-class _MePageState extends State<MePage> {
+class _MePageState extends State<MePage> with SafeStateMixin<MePage> {
   @override
   void initState() {
     super.initState();
-    User().addListener(onLoginStateChanged);
+    user.state.addListener(setState);
   }
 
   @override
   void dispose() {
-    User().removeListener(onLoginStateChanged);
+    user.state.removeListener(setState);
     super.dispose();
   }
 
@@ -37,12 +38,8 @@ class _MePageState extends State<MePage> {
   void didUpdateWidget(MePage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.visible && !oldWidget.visible) {
-      User().refreshUserProfile();
+      user.profile.update();
     }
-  }
-
-  void onLoginStateChanged() {
-    setState(() {});
   }
 
   @override
@@ -58,7 +55,7 @@ class _MePageState extends State<MePage> {
               ItemText(
                 icon: R.image.meNightMode,
                 text: strings.meNightMode,
-                right: Switch.adaptive(value: Config().nightMode, onChanged: onNightModeChanged),
+                right: Switch.adaptive(value: config.nightMode, onChanged: onNightModeChanged),
               ),
               ItemText.rightArrow(
                 icon: R.image.meSetting,
@@ -80,7 +77,7 @@ class _MePageState extends State<MePage> {
     Dialogs.showLoading(context);
     var sp = await SharedPreferences.getInstance();
     sp.setBool(Keys.settingNightModeSwitch, nightMode);
-    Config().setAppTheme(nightMode ? AppTheme.dark : AppTheme.light);
+    config.setAppTheme(nightMode ? AppTheme.dark : AppTheme.light);
     Routes.pop(context);
   }
 }

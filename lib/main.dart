@@ -34,7 +34,7 @@ Future<void> initAppTheme([AppTheme theme]) async {
     var sp = await SharedPreferences.getInstance();
     bool nightMode = sp.getBool(Keys.settingNightModeSwitch) ?? false;
     theme = nightMode ? AppTheme.dark : AppTheme.light;
-    Config().setAppTheme(theme, false);
+    config.setAppTheme(theme, false);
   }
 
   SystemChrome.setPreferredOrientations([
@@ -43,8 +43,8 @@ Future<void> initAppTheme([AppTheme theme]) async {
   ]);
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Config().nightMode ? Brightness.light : Brightness.dark,
-    statusBarBrightness: Config().nightMode ? Brightness.dark : Brightness.light,
+    statusBarIconBrightness: config.nightMode ? Brightness.light : Brightness.dark,
+    statusBarBrightness: config.nightMode ? Brightness.dark : Brightness.light,
   ));
 
   TitleBar.defaultTitleStyle = R.style.titleText;
@@ -54,8 +54,10 @@ Future<void> initAppTheme([AppTheme theme]) async {
   Line.defaultColor = R.color.border;
   Line.defaultHeight = R.dimen.borderWidth;
   TextButton.defaultStyle = R.style.linkText;
-  Button.defaultStyle = R.style.boldText.copyWith(color: R.color.buttonText, fontSize: 16);
-  Button.defaultColor = R.color.accent;
+  Button.defaultButtonStyle = ButtonStyle(
+    style: R.style.boldText.copyWith(color: R.color.buttonText, fontSize: 16),
+    color: R.color.accent,
+  );
   NoRecord.defaultStyle = R.style.secondaryText;
   NoRecord.defaultText = R.string.noRecord;
   TextInputWidget.defaultStyle = R.style.primaryText;
@@ -82,7 +84,7 @@ void main() {
     runApp(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<Config>.value(value: Config()),
+          ChangeNotifierProvider<Config>.value(value: config),
         ],
         child: App(),
       ),
@@ -102,7 +104,7 @@ class App extends StatelessWidget {
       locale: Locale(Config(context).languageCode),
       theme: ThemeData(
         primaryColor: R.color.primary,
-        primaryColorBrightness: Config().nightMode ? Brightness.dark : Brightness.light,
+        primaryColorBrightness: config.nightMode ? Brightness.dark : Brightness.light,
         scaffoldBackgroundColor: R.color.pageBackground,
         // textBaseline: TextBaseline.alphabetic解决 TextField hint 不居中对齐的问题
         textTheme: TextTheme(subhead: const TextStyle(textBaseline: TextBaseline.alphabetic)),
