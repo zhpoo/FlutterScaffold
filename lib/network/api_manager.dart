@@ -29,9 +29,7 @@ OnFailed _onFailedWrapper(OnFailed onFailed) {
     if (result?.statusCode != Code.failed && result?.body is String && result.body.isNotEmpty) {
       Toasts.show(msg: result.body);
     }
-    if (onFailed != null) {
-      onFailed(result);
-    }
+    onFailed?.call(result);
   };
 }
 
@@ -43,10 +41,29 @@ OnSuccess<Model> _onSuccessWrapper<Model>(OnSuccess<Model> onSuccess) {
         Toasts.show(msg: model.message);
       }
     }
-    if (onSuccess != null) {
-      onSuccess(model, resultData);
-    }
+    onSuccess?.call(model, resultData);
   };
+}
+
+extension _HttpExtension on Http {
+  Future<void> addCommonParam([bool needToken = true]) async {
+    options.baseUrl = ApiUrl.baseUrl;
+    if (needToken && user.isLogin) {
+      addHeader('token', user.token);
+    }
+  }
+
+  /// 添加公共参数后执行该[Http]请求
+  Future<void> execute<T>([OnSuccess<T> onSuccess, OnFailed onFailed, bool needToken = true]) async {
+    await addCommonParam(needToken);
+    var result = await call();
+    if (result.isSuccessful) {
+      T model = ModelFactory.fromJson<T>(result.body);
+      _onSuccessWrapper<T>(onSuccess)(model, result);
+    } else {
+      _onFailedWrapper(onFailed)(result);
+    }
+  }
 }
 
 class ApiManager {
@@ -57,56 +74,32 @@ class ApiManager {
     mergeDioBaseOptions(baseUrl: ApiUrl.baseUrl);
   }
 
-  static Model _deliverResult<Model>(ResultData result, OnSuccess<Model> onSuccess,
-      [OnFailed onFailed]) {
-    if (result.isSuccessful) {
-      Model model = ModelFactory.fromJson(result.body);
-      _onSuccessWrapper<Model>(onSuccess)(model, result);
-      return model;
-    } else {
-      _onFailedWrapper(onFailed)(result);
-      return null;
-    }
-  }
-
-  /// 为 http 统一添加公共参数
-  static Http _wrapHttp(Http http) {
-    if (User().isLogin) {
-      http.addHeader('token', User().token);
-    }
-    return http;
-  }
-
   /// GET 获取版本信息
-  static getConfig({
+  static Future<void> getConfig({
     OnSuccess<ConfigModel> onSuccess,
     OnFailed onFailed,
   }) async {
-    var http = _wrapHttp(Http.get(ApiUrl.config));
-    http.addParam('type', BaseConfig.platform);
-    http.addParam('version', await BaseConfig.appVersion);
-    ResultData resultData = await http.call();
-    _deliverResult(resultData, onSuccess, onFailed);
+    return Http.get(ApiUrl.config)
+        .addParam('type', BaseConfig.platform)
+        .addParam('version', await BaseConfig.appVersion)
+        .execute(onSuccess, onFailed);
   }
 
   /// POST 登录
-  static signIn({
+  static Future<void> signIn({
     @required String email,
     @required String password,
     OnSuccess<SignInModel> onSuccess,
     OnFailed onFailed,
-  }) async {
-    var http = _wrapHttp(Http.post(ApiUrl.signIn));
-    http.addParam('email', email);
-    http.addParam('password', password);
-    ResultData resultData = await http.call();
-    _deliverResult(resultData, onSuccess, onFailed);
+  }) {
+    return Http.post(ApiUrl.signIn)
+        .addParam('email', email)
+        .addParam('password', password)
+        .execute(onSuccess, onFailed);
   }
 
   /// GET 用户基本信息
-  static getUserProfile({OnSuccess<UserProfileModel> onSuccess, OnFailed onFailed}) async {
-    var http = _wrapHttp(Http.get(ApiUrl.userProfile));
-    ResultData resultData = await http.call();
-    _deliverResult(resultData, onSuccess, onFailed);
+  static Future<void> getUserProfile({OnSuccess<UserProfileModel> onSuccess, OnFailed onFailed}) async {
+    return Http.get(ApiUrl.userProfile).execute(onSuccess, onFailed);
   }
 }

@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyrefresh/ball_pulse_footer.dart';
 import 'package:flutter_easyrefresh/ball_pulse_header.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:musket/common/abstracts.dart';
 import 'package:musket/common/logger.dart';
-import 'package:musket/common/toasts.dart';
 import 'package:musket/common/utils.dart';
 import 'package:musket/musket.dart';
-import 'package:musket/route/mixin/lazy_indexed_pages.dart';
+import 'package:musket/route/mixin/bottom_navigation_bar_mixin.dart';
 import 'package:musket/route/routes.dart';
 import 'package:musket/widget/button.dart';
 import 'package:musket/widget/divider.dart';
@@ -47,12 +47,13 @@ Future<void> initAppTheme([AppTheme theme]) async {
     statusBarBrightness: config.nightMode ? Brightness.dark : Brightness.light,
   ));
 
-  TitleBar.defaultTitleStyle = R.style.titleText;
-  TitleBar.backAsset = R.image.commonArrowBack;
+  TitleBar.defaultStyle = TitleBarStyle(
+    titleStyle: R.style.titleText,
+    backAsset: R.image.commonArrowBack,
+  );
   ItemText.defaultStyle = R.style.primaryText;
   ItemText.rightArrowImage = R.image.commonArrowRight;
-  Line.defaultColor = R.color.border;
-  Line.defaultHeight = R.dimen.borderWidth;
+  Line.defaultStyle = LineStyle(color: R.color.border, height: R.dimen.borderWidth);
   TextButton.defaultStyle = R.style.linkText;
   Button.defaultButtonStyle = ButtonStyle(
     style: R.style.boldText.copyWith(color: R.color.buttonText, fontSize: 16),
@@ -107,7 +108,7 @@ class App extends StatelessWidget {
         primaryColorBrightness: config.nightMode ? Brightness.dark : Brightness.light,
         scaffoldBackgroundColor: R.color.pageBackground,
         // textBaseline: TextBaseline.alphabetic解决 TextField hint 不居中对齐的问题
-        textTheme: TextTheme(subhead: const TextStyle(textBaseline: TextBaseline.alphabetic)),
+        textTheme: TextTheme(subtitle1: const TextStyle(textBaseline: TextBaseline.alphabetic)),
         cursorColor: R.color.primaryText,
         toggleableActiveColor: R.color.accent,
       ),
@@ -120,16 +121,14 @@ class MainPage extends StatefulWidget {
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with LazyIndexedPagesMixin {
-  DateTime _lastPressBackTime;
-
+class _MainPageState extends BaseMainPageSate<MainPage> {
   @override
   List<Widget> get pages {
     return [
-      RecommendPage(key: const ValueKey('main.recommend'), isVisible: currentPageIndex == 0),
+      RecommendPage(key: const ValueKey('main.recommend'), isVisible: currentIndex == 0),
       CategoryPage(key: const ValueKey('main.category')),
       BookshelfPage(key: const ValueKey('main.bookshelf')),
-      MePage(key: const ValueKey('main.me'), visible: currentPageIndex == 3),
+      MePage(key: const ValueKey('main.me'), visible: currentIndex == 3),
     ];
   }
 
@@ -143,80 +142,42 @@ class _MainPageState extends State<MainPage> with LazyIndexedPagesMixin {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: onWillPop,
-      child: Scaffold(
-        // 使用 IndexedStack 解决切换 Tab 后页面状态丢失的问题
-        body: IndexedStack(index: currentPageIndex, children: lazyPages),
-        bottomNavigationBar: BottomNavigationBar(
-          elevation: 0.5,
-          backgroundColor: R.color.bottomTabBarBackground,
-          items: buildNavBarItems(),
-          currentIndex: currentPageIndex,
-          onTap: changePage,
-          selectedItemColor: R.color.primaryText,
-          unselectedItemColor: R.color.tertiaryText,
-          selectedFontSize: 10,
-          unselectedFontSize: 10,
-          type: BottomNavigationBarType.fixed,
-        ),
-      ),
-    );
-  }
-
-  void changePage(int index) {
-    if (currentPageIndex == index) {
-      return;
-    }
-    setState(() {
-      currentPageIndex = index;
-    });
-  }
-
-  Future<bool> onWillPop() async {
-    if (_lastPressBackTime == null ||
-        DateTime.now().difference(_lastPressBackTime) > Duration(seconds: 2)) {
-      _lastPressBackTime = DateTime.now();
-      Toasts.show(msg: R.string.mainPressAgainTips);
-      return false;
-    }
-    return true;
-  }
-
-  List<BottomNavigationBarItem> buildNavBarItems() {
-    var strings = R.string;
+  List<NavigationBarItem> get navigationBarItems {
     return [
-      buildNavItem(
-        strings.mainRecommend,
-        R.image.mainRecommendUnselected,
-        R.image.mainRecommendSelected,
+      NavigationBarItem(
+        title: R.string.mainRecommend,
+        icon: R.image.mainRecommendUnselected,
+        activeIcon: R.image.mainRecommendSelected,
       ),
-      buildNavItem(
-        strings.mainCategory,
-        R.image.mainCategoryUnselected,
-        R.image.mainCategorySelected,
+      NavigationBarItem(
+        title: R.string.mainCategory,
+        icon: R.image.mainCategoryUnselected,
+        activeIcon: R.image.mainCategorySelected,
       ),
-      buildNavItem(
-        strings.mainBookshelf,
-        R.image.mainBookshelfUnselected,
-        R.image.mainBookshelfSelected,
+      NavigationBarItem(
+        title: R.string.mainBookshelf,
+        icon: R.image.mainBookshelfUnselected,
+        activeIcon: R.image.mainBookshelfSelected,
       ),
-      buildNavItem(
-        strings.mainMe,
-        R.image.mainMeUnselected,
-        R.image.mainMeSelected,
+      NavigationBarItem(
+        title: R.string.mainMe,
+        icon: R.image.mainMeUnselected,
+        activeIcon: R.image.mainMeSelected,
       ),
     ];
   }
 
-  BottomNavigationBarItem buildNavItem(String title, String icon, String activeIcon) {
-    return BottomNavigationBarItem(
-      icon: Image.asset(icon, height: R.dimen.iconSize, width: R.dimen.iconSize),
-      activeIcon: Image.asset(activeIcon, width: R.dimen.iconSize, height: R.dimen.iconSize),
-      title: Text(title),
+  @override
+  NavigationBarStyle get navigationBarStyle {
+    return NavigationBarStyle(
+      backgroundColor: R.color.bottomTabBarBackground,
+      selectedItemColor: R.color.accent,
+      unselectedItemColor: R.color.secondaryText,
     );
   }
+
+  @override
+  String get pressAgainTips => R.string.mainPressAgainTips;
 
   void checkAppVersion() {
     // TODO: 版本更新
